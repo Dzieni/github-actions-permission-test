@@ -1,0 +1,31 @@
+name: Log repository projects
+on:
+  push:
+    branches:
+      - main
+
+permissions: read-all
+
+jobs:
+  logRepoProjects:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: octokit/graphql-action@v2.x
+        id: get_projects
+        with:
+          query: |
+            query projects($owner: String!, $repo: String!) {
+              repository(owner: $owner, name: $repo) {
+                projectsV2(first: 50) {
+                  nodes {
+                    id
+                    title
+                  }
+                }
+              }
+            }
+          owner: ${{ github.event.repository.owner.name }}
+          repo: ${{ github.event.repository.name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: "echo 'project release: ${{ steps.get_projects.outputs.data }}'"
